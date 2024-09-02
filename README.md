@@ -1,39 +1,86 @@
-# Nautilfer
+# nautilfer
 
-TODO: Delete this and the text below, and describe your gem
+[![Gem Version](https://badge.fury.io/rb/nautilfer.svg)](https://badge.fury.io/rb/nautilfer)
+[![Build Status](https://github.com/slidict/nautilfer/actions/workflows/main.yml/badge.svg)](https://github.com/slidict/nautilfer/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/nautilfer`. To experiment with that code, run `bin/console` for an interactive prompt.
+`nautilfer` is a gem that allows you to parse and analyze web pages, extracting key statistics and information for further use within your projects.
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
+Add this line to your application's Gemfile:
 
-Install the gem and add to the application's Gemfile by executing:
 
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
+```ruby
+gem 'nautilfer'
+```
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+And then execute:
 
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
+```bash
+$ bundle install
+```
+
+Or install it yourself as:
+
+```bash
+$ gem install nautilfer
+```
+
+### Resolving UID Mismatch Between Docker and Host
+
+To resolve issues related to the difference between Docker's UID and the host's UID, add the following line to your .bashrc or similar shell configuration file:
+
+```bash
+export UID=${UID}
+```
+
+This will ensure that the environment variable UID is correctly set in your Docker containers, matching your host system's user ID.
+
+This explanation provides clear instructions on how to resolve the UID mismatch issue using the export command.
 
 ## Usage
+To use nautilfer, first require it.
 
-TODO: Write usage instructions here
+```ruby
+require 'nautilfer'
+```
 
-## Development
+Then, you can easily parse and extract information from a web page like this:
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+```ruby
+# TODO Implement
+```
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+## Features
+- More features coming soon!
+
+## Commit Message Guidelines
+
+To ensure consistency and facilitate automatic updates to the `CHANGELOG.md`, please follow the [Conventional Commits](https://www.conventionalcommits.org/) specification when creating commit messages. This helps maintain a clear and structured commit history.
+
+When submitting a Pull Request (PR), make sure your commits adhere to these guidelines.
+
+### Example of Conventional Commit Messages:
+
+- `feat: add new feature for parsing web pages`
+- `fix: resolve issue with URL redirection`
+- `docs: update README with usage instructions`
+- `chore: update dependencies`
+- `build: update build configuration`
+- `ci: update CI pipeline`
+- `style: fix code style issues`
+- `refactor: refactor code for better readability`
+- `perf: improve performance of data processing`
+- `test: add new tests for URL parsing module`
+
+By following these guidelines, you help ensure that our project's commit history is easy to navigate and that versioning and release notes are generated correctly.
 
 ## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/nautilfer. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/[USERNAME]/nautilfer/blob/master/CODE_OF_CONDUCT.md).
+Bug reports and pull requests are welcome on GitHub at https://github.com/slidict/nautilfer. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the Contributor Covenant code of conduct.
 
 ## License
+The gem is available as open-source under the terms of the MIT License.
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
-
-## Code of Conduct
-
-Everyone interacting in the Nautilfer project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/[USERNAME]/nautilfer/blob/master/CODE_OF_CONDUCT.md).
+## Acknowledgments
+Special thanks to all the contributors and open-source projects that make this possible.

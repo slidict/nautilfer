@@ -49,7 +49,7 @@ require 'nautilfer'
 Then, you can easily parse and extract information from a web page like this:
 
 ```ruby
-# TODO Implement
+Nautilfer.to_teams(message: "## TEST\nhello", endpoint: "#{workflow_endpoint}")
 ```
 
 ## Features

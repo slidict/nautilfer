@@ -1,5 +1,3 @@
-#### テストファイル `spec/lib/nautilfer/chatwork_notifier_spec.rb`
-```ruby
 require 'nautilfer/chatwork_notifier'
 
 RSpec.describe Nautilfer::ChatworkNotifier do

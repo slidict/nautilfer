@@ -52,6 +52,15 @@ Then, you can easily parse and extract information from a web page like this:
 Nautilfer.to_teams(message: "## TEST\nhello", endpoint: "#{workflow_endpoint}")
 ```
 
+## Chatwork Notification Integration
+
+To enable Chatwork notifications, configure the API token and room ID:
+
+```ruby
+notifier = Nautilfer::ChatworkNotifier.new('your_api_token', 'your_room_id')
+notifier.notify('This is a test message from Nautilfer!')
+```
+
 ## Features
 - More features coming soon!
 

@@ -6,6 +6,10 @@
 
 `nautilfer` is a gem that allows you to parse and analyze web pages, extracting key statistics and information for further use within your projects.
 
+## Requirements
+
+- Ruby >= 3.4
+
 ## Installation
 
 Add this line to your application's Gemfile:
@@ -50,6 +54,24 @@ Then, you can easily parse and extract information from a web page like this:
 
 ```ruby
 Nautilfer.to_teams(message: "## TEST\nhello", endpoint: "#{workflow_endpoint}")
+```
+
+Or instantiate Nautilfer directly when you want to reuse the same endpoint:
+
+```ruby
+notifier = Nautilfer.new(endpoint: "#{workflow_endpoint}", adapter: :teams)
+notifier.notify("## TEST\nhello")
+```
+
+To notify a Slack channel via Incoming Webhook:
+
+```ruby
+Nautilfer.to_slack(message: "Deployment completed", endpoint: "#{slack_webhook_url}")
+```
+
+```ruby
+slack_notifier = Nautilfer.new(endpoint: "#{slack_webhook_url}", adapter: :slack)
+slack_notifier.notify("Deployment completed")
 ```
 
 ## Chatwork Notification Integration

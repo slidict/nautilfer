@@ -2,7 +2,7 @@ require 'net/http'
 require 'uri'
 require 'json'
 
-module Nautilfer
+class Nautilfer
   class ChatworkNotifier
     CHATWORK_API_ENDPOINT = "https://api.chatwork.com/v2"
 

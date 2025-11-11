@@ -6,6 +6,10 @@
 
 `nautilfer` is a gem that allows you to parse and analyze web pages, extracting key statistics and information for further use within your projects.
 
+## Requirements
+
+- Ruby >= 3.4
+
 ## Installation
 
 Add this line to your application's Gemfile:

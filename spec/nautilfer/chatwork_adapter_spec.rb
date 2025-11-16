@@ -22,7 +22,10 @@ RSpec.describe Nautilfer::Adapters::Chatwork do
       notifier.notify('Test message')
 
       expect(WebMock).to have_requested(:post, endpoint)
-        .with(headers: hash_including('X-ChatWorkToken' => api_token))
+        .with(headers: {
+          'X-ChatWorkToken' => api_token,
+          'Content-Type' => 'application/x-www-form-urlencoded'
+        })
         .with(body: 'body=Test+message')
     end
   end
@@ -36,13 +39,19 @@ RSpec.describe Nautilfer::Adapters::Chatwork do
       notifier = Nautilfer.new(endpoint: endpoint, adapter: :chatwork)
 
       stub_request(:post, endpoint)
-        .with(headers: hash_including('X-ChatWorkToken' => api_token))
+        .with(headers: {
+          'X-ChatWorkToken' => api_token,
+          'Content-Type' => 'application/x-www-form-urlencoded'
+        })
         .to_return(status: 200, body: '{}')
 
       notifier.notify('Hello chatwork')
 
       expect(WebMock).to have_requested(:post, endpoint)
-        .with(headers: hash_including('X-ChatWorkToken' => api_token))
+        .with(headers: {
+          'X-ChatWorkToken' => api_token,
+          'Content-Type' => 'application/x-www-form-urlencoded'
+        })
     end
     end
   end

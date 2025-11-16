@@ -74,6 +74,50 @@ slack_notifier = Nautilfer.new(endpoint: "#{slack_webhook_url}", adapter: :slack
 slack_notifier.notify("Deployment completed")
 ```
 
+### Control notifications by environment
+
+Use the environment controls to avoid sending notifications in non-production environments. The notifier checks the `environment` you pass in (defaulting to `ENV['NAUTILFER_ENV']`, `ENV['RAILS_ENV']`, or `ENV['RACK_ENV']`) and will only send messages when the environment is allowed.
+
+Enable notifications only in specific environments:
+
+```ruby
+Nautilfer.to_teams(
+  message: "Release deployed",
+  endpoint: "#{workflow_endpoint}",
+  environment: 'production',
+  enabled_environments: ['production']
+)
+```
+
+Or disable notifications for certain environments:
+
+```ruby
+Nautilfer.to_slack(
+  message: "Smoke tests running",
+  endpoint: "#{slack_webhook_url}",
+  environment: 'test',
+  disabled_environments: ['test', 'development']
+)
+```
+
+### Configure defaults once
+
+Persist your environment preferences by configuring defaults up front. New instances and helper calls will reuse these values unless you override them per call.
+
+```ruby
+Nautilfer.configure do |config|
+  config.environment = ENV['NAUTILFER_ENV']
+  config.enabled_environments = ['production']
+  config.disabled_environments = ['test']
+end
+
+notifier = Nautilfer.new(endpoint: "#{workflow_endpoint}", adapter: :teams)
+notifier.notify("Deployment finished")
+
+# Helpers will also reuse the configured defaults
+Nautilfer.to_slack(message: "Deployment finished", endpoint: "#{slack_webhook_url}")
+```
+
 ## Chatwork Notification Integration
 
 To enable Chatwork notifications, configure the API token and room ID:

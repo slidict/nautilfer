@@ -145,6 +145,60 @@ RSpec.describe Nautilfer do
         expect(WebMock).not_to have_requested(:post, endpoint)
       end
     end
+
+    context 'when a message template is configured' do
+      let(:message_templates) do
+        {
+          default: ->(msg) { "[default] #{msg}" },
+          plain: ->(msg) { msg }
+        }
+      end
+
+      before do
+        Nautilfer.configure do |config|
+          config.message_templates = message_templates
+          config.default_message_template = :default
+        end
+
+        stub_request(:post, endpoint)
+          .with(
+            body: { "text" => "[default] #{message}" }.to_json,
+            headers: { 'Content-Type' => 'application/json' }
+          )
+          .to_return(status: 200, body: "", headers: {})
+
+        stub_request(:post, "#{endpoint}/plain")
+          .with(
+            body: { "text" => message }.to_json,
+            headers: { 'Content-Type' => 'application/json' }
+          )
+          .to_return(status: 200, body: "", headers: {})
+      end
+
+      after do
+        described_class.reset_configuration!
+      end
+
+      it 'uses the default template from configuration' do
+        notifier = described_class.new(endpoint: endpoint, adapter: Nautilfer::Adapters::Slack.new)
+        notifier.notify(message)
+
+        expect(WebMock).to have_requested(:post, endpoint).with(
+          body: { "text" => "[default] #{message}" }.to_json,
+          headers: { 'Content-Type' => 'application/json' }
+        ).once
+      end
+
+      it 'switches templates when specified at initialization' do
+        notifier = described_class.new(endpoint: "#{endpoint}/plain", adapter: Nautilfer::Adapters::Slack.new, message_template: :plain)
+        notifier.notify(message)
+
+        expect(WebMock).to have_requested(:post, "#{endpoint}/plain").with(
+          body: { "text" => message }.to_json,
+          headers: { 'Content-Type' => 'application/json' }
+        ).once
+      end
+    end
   end
 
   describe '.configure' do

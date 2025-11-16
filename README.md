@@ -107,6 +107,27 @@ notifier = Nautilfer.new(endpoint: "#{workflow_endpoint}", adapter: :teams)
 notifier.notify("Deployment finished")
 ```
 
+### Configure message templates
+
+Define reusable message templates in the global configuration and select them when instantiating a notifier. Templates are callables that receive the original message and return the formatted text.
+
+```ruby
+Nautilfer.configure do |config|
+  config.message_templates = {
+    default: ->(message) { "[default] #{message}" },
+    headline: ->(message) { "## #{message}" }
+  }
+
+  config.default_message_template = :default
+end
+
+notifier = Nautilfer.new(endpoint: "#{workflow_endpoint}", adapter: :slack)
+notifier.notify("Deployment finished") # => sends "[default] Deployment finished"
+
+headline_notifier = Nautilfer.new(endpoint: "#{workflow_endpoint}", adapter: :slack, message_template: :headline)
+headline_notifier.notify("Deployment finished") # => sends "## Deployment finished"
+```
+
 ## Chatwork Notification Integration
 
 To enable Chatwork notifications using the unified adapter interface, initialize `Nautilfer` with the Chatwork adapter and tar

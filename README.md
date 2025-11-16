@@ -50,27 +50,17 @@ To use nautilfer, first require it.
 require 'nautilfer'
 ```
 
-Then, you can easily parse and extract information from a web page like this:
+Instantiate Nautilfer with the adapter you want to use:
 
 ```ruby
-Nautilfer.to_teams(message: "## TEST\nhello", endpoint: "#{workflow_endpoint}")
-```
-
-Or instantiate Nautilfer directly when you want to reuse the same endpoint:
-
-```ruby
-notifier = Nautilfer.new(endpoint: "#{workflow_endpoint}", adapter: :teams)
+notifier = Nautilfer.new(endpoint: "#{workflow_endpoint}", adapter: Nautilfer::Adapters::Teams.new)
 notifier.notify("## TEST\nhello")
 ```
 
 To notify a Slack channel via Incoming Webhook:
 
 ```ruby
-Nautilfer.to_slack(message: "Deployment completed", endpoint: "#{slack_webhook_url}")
-```
-
-```ruby
-slack_notifier = Nautilfer.new(endpoint: "#{slack_webhook_url}", adapter: :slack)
+slack_notifier = Nautilfer.new(endpoint: "#{slack_webhook_url}", adapter: Nautilfer::Adapters::Slack.new)
 slack_notifier.notify("Deployment completed")
 ```
 
@@ -81,28 +71,30 @@ Use the environment controls to avoid sending notifications in non-production en
 Enable notifications only in specific environments:
 
 ```ruby
-Nautilfer.to_teams(
-  message: "Release deployed",
+notifier = Nautilfer.new(
   endpoint: "#{workflow_endpoint}",
+  adapter: Nautilfer::Adapters::Teams.new,
   environment: 'production',
   enabled_environments: ['production']
 )
+notifier.notify("Release deployed")
 ```
 
 Or disable notifications for certain environments:
 
 ```ruby
-Nautilfer.to_slack(
-  message: "Smoke tests running",
+slack_notifier = Nautilfer.new(
   endpoint: "#{slack_webhook_url}",
+  adapter: Nautilfer::Adapters::Slack.new,
   environment: 'test',
   disabled_environments: ['test', 'development']
 )
+slack_notifier.notify("Smoke tests running")
 ```
 
 ### Configure defaults once
 
-Persist your environment preferences by configuring defaults up front. New instances and helper calls will reuse these values unless you override them per call.
+Persist your environment preferences by configuring defaults up front. New instances will reuse these values unless you override them per call.
 
 ```ruby
 Nautilfer.configure do |config|
@@ -113,19 +105,23 @@ end
 
 notifier = Nautilfer.new(endpoint: "#{workflow_endpoint}", adapter: :teams)
 notifier.notify("Deployment finished")
-
-# Helpers will also reuse the configured defaults
-Nautilfer.to_slack(message: "Deployment finished", endpoint: "#{slack_webhook_url}")
 ```
 
 ## Chatwork Notification Integration
 
-To enable Chatwork notifications, configure the API token and room ID:
+To enable Chatwork notifications using the unified adapter interface, initialize `Nautilfer` with the Chatwork adapter and tar
+get a room-specific endpoint:
 
 ```ruby
-notifier = Nautilfer::ChatworkNotifier.new('your_api_token', 'your_room_id')
+endpoint = "https://api.chatwork.com/v2/rooms/#{room_id}/messages"
+notifier = Nautilfer.new(
+  endpoint: endpoint,
+  adapter: Nautilfer::Adapters::Chatwork.new(api_token: ENV['CHATWORK_API_TOKEN'])
+)
 notifier.notify('This is a test message from Nautilfer!')
 ```
+
+You can also pass `adapter: :chatwork` when `CHATWORK_API_TOKEN` is set in your environment.
 
 ## Features
 - More features coming soon!

@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
 require_relative "nautilfer/version"
+require_relative "nautilfer/adapters/base"
+require_relative "nautilfer/adapters/teams"
+require_relative "nautilfer/adapters/slack"
+require_relative "nautilfer/adapters/chatwork"
 require "json/add/core"
 require "net/http"
 require "uri"
@@ -29,11 +33,11 @@ class Nautilfer
     @configuration = Configuration.new
   end
 
-  def initialize(endpoint:, adapter: :teams, environment: nil, enabled_environments: nil, disabled_environments: nil)
+  def initialize(endpoint:, adapter: Adapters::Teams.new, environment: nil, enabled_environments: nil, disabled_environments: nil)
     config = self.class.configuration
 
     @endpoint = URI.parse(endpoint)
-    @adapter = adapter
+    @adapter = resolve_adapter(adapter)
     @environment = environment || config.environment || ENV['NAUTILFER_ENV'] || ENV['RAILS_ENV'] || ENV['RACK_ENV']
     @enabled_environments = normalize_env_list(enabled_environments, config.enabled_environments)
     @disabled_environments = normalize_env_list(disabled_environments, config.disabled_environments)
@@ -46,29 +50,42 @@ class Nautilfer
     perform_request(payload, headers)
   end
 
-  def self.to_teams(message:, endpoint:, environment: nil, enabled_environments: nil, disabled_environments: nil)
-    new(
-      endpoint: endpoint,
-      adapter: :teams,
-      environment: environment,
-      enabled_environments: enabled_environments,
-      disabled_environments: disabled_environments
-    ).notify(message)
-  end
-
-  def self.to_slack(message:, endpoint:, environment: nil, enabled_environments: nil, disabled_environments: nil)
-    new(
-      endpoint: endpoint,
-      adapter: :slack,
-      environment: environment,
-      enabled_environments: enabled_environments,
-      disabled_environments: disabled_environments
-    ).notify(message)
-  end
-
   private
 
   attr_reader :endpoint, :adapter, :environment, :enabled_environments, :disabled_environments
+
+  def resolve_adapter(adapter)
+    resolved_adapter =
+      case adapter
+      when Symbol
+        adapter_from_symbol(adapter)
+      when Class
+        adapter.new
+      else
+        adapter
+      end
+
+    validate_adapter!(resolved_adapter)
+  end
+
+  def adapter_from_symbol(adapter)
+    case adapter
+    when :teams
+      Adapters::Teams.new
+    when :slack
+      Adapters::Slack.new
+    when :chatwork
+      Adapters::Chatwork.new(api_token: ENV.fetch('CHATWORK_API_TOKEN') { raise Error, 'CHATWORK_API_TOKEN is required for chatwork adapter' })
+    else
+      raise Error, "Unsupported adapter: #{adapter}"
+    end
+  end
+
+  def validate_adapter!(adapter)
+    return adapter if adapter.respond_to?(:payload) && adapter.respond_to?(:headers) && adapter.respond_to?(:body)
+
+    raise Error, "Unsupported adapter: #{adapter.inspect}"
+  end
 
   def normalize_env_list(custom_value, configured_value)
     Array(custom_value.nil? ? configured_value : custom_value).compact
@@ -82,18 +99,7 @@ class Nautilfer
   end
 
   def build_payload(message)
-    case adapter
-    when :teams
-      [teams_payload(message), default_headers]
-    when :slack
-      [slack_payload(message), default_headers]
-    else
-      raise Error, "Unsupported adapter: #{adapter}"
-    end
-  end
-
-  def default_headers
-    { 'Content-Type' => 'application/json' }
+    [adapter.payload(message), adapter.headers]
   end
 
   def perform_request(payload, headers)
@@ -101,37 +107,8 @@ class Nautilfer
     http.use_ssl = endpoint.scheme == 'https'
     http.start do |connection|
       request = Net::HTTP::Post.new(endpoint.request_uri, headers)
-      request.body = payload.to_json
+      request.body = adapter.body(payload)
       connection.request(request)
     end
-  end
-
-  def teams_payload(message)
-    {
-      "attachments": [
-        {
-          "contentType": "application/vnd.microsoft.card.adaptive",
-          "content": {
-            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-            "type": "AdaptiveCard",
-            "version": "1.2",
-            "body": [
-              {
-                "type": "TextBlock",
-                "text": message,
-                "wrap": true,
-                "markdown": true
-              }
-            ]
-          }
-        }
-      ]
-    }
-  end
-
-  def slack_payload(message)
-    {
-      "text": message
-    }
   end
 end

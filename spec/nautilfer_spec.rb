@@ -10,8 +10,8 @@ RSpec.describe Nautilfer do
     let(:message) { "Instance message" }
     let(:endpoint) { "https://example.com/webhook" }
 
-    context 'when adapter is teams' do
-      let(:notifier) { described_class.new(endpoint: endpoint, adapter: :teams) }
+    context 'when adapter is Teams' do
+      let(:notifier) { described_class.new(endpoint: endpoint, adapter: Nautilfer::Adapters::Teams.new) }
 
       before do
         stub_request(:post, endpoint)
@@ -69,8 +69,8 @@ RSpec.describe Nautilfer do
       end
     end
 
-    context 'when adapter is slack' do
-      let(:notifier) { described_class.new(endpoint: endpoint, adapter: :slack) }
+    context 'when adapter is Slack' do
+      let(:notifier) { described_class.new(endpoint: endpoint, adapter: Nautilfer::Adapters::Slack.new) }
 
       before do
         stub_request(:post, endpoint)
@@ -90,11 +90,33 @@ RSpec.describe Nautilfer do
       end
     end
 
+    context 'when adapter is provided as a symbol' do
+      let(:notifier) { described_class.new(endpoint: endpoint, adapter: :slack) }
+
+      before do
+        stub_request(:post, endpoint)
+          .with(
+            body: { "text" => message }.to_json,
+            headers: { 'Content-Type' => 'application/json' }
+          )
+          .to_return(status: 200, body: "", headers: {})
+      end
+
+      it 'resolves the adapter and sends a notification' do
+        notifier.notify(message)
+
+        expect(WebMock).to have_requested(:post, endpoint).with(
+          body: { "text" => message }.to_json,
+          headers: { 'Content-Type' => 'application/json' }
+        ).once
+      end
+    end
+
     context 'when the environment is not enabled' do
       let(:notifier) do
         described_class.new(
           endpoint: endpoint,
-          adapter: :teams,
+          adapter: Nautilfer::Adapters::Teams.new,
           environment: 'development',
           enabled_environments: ['production']
         )
@@ -111,7 +133,7 @@ RSpec.describe Nautilfer do
       let(:notifier) do
         described_class.new(
           endpoint: endpoint,
-          adapter: :teams,
+          adapter: Nautilfer::Adapters::Teams.new,
           environment: 'staging',
           disabled_environments: ['staging']
         )
@@ -122,110 +144,6 @@ RSpec.describe Nautilfer do
 
         expect(WebMock).not_to have_requested(:post, endpoint)
       end
-    end
-  end
-
-  describe '.to_teams' do
-    let(:message) { "Test message" }
-    let(:endpoint) { "https://example.com/webhook" }
-
-    before do
-      stub_request(:post, endpoint)
-        .with(
-          body: {
-            "attachments" => [
-              {
-                "contentType" => "application/vnd.microsoft.card.adaptive",
-                "content" => {
-                  "$schema" => "http://adaptivecards.io/schemas/adaptive-card.json",
-                  "type" => "AdaptiveCard",
-                  "version" => "1.2",
-                  "body" => [
-                    {
-                      "type" => "TextBlock",
-                      "text" => message,
-                      "wrap" => true,
-                      "markdown" => true
-                    }
-                  ]
-                }
-              }
-            ]
-          }.to_json,
-          headers: { 'Content-Type' => 'application/json' }
-        )
-        .to_return(status: 200, body: "", headers: {})
-    end
-
-    it 'sends a POST request to the specified endpoint with the correct payload' do
-      Nautilfer.to_teams(message: message, endpoint: endpoint)
-      expect(WebMock).to have_requested(:post, endpoint).with(
-        body: {
-          "attachments" => [
-            {
-              "contentType" => "application/vnd.microsoft.card.adaptive",
-              "content" => {
-                "$schema" => "http://adaptivecards.io/schemas/adaptive-card.json",
-                "type" => "AdaptiveCard",
-                "version" => "1.2",
-                "body" => [
-                  {
-                    "type" => "TextBlock",
-                    "text" => message,
-                    "wrap" => true,
-                    "markdown" => true
-                  }
-                ]
-              }
-            }
-          ]
-        }.to_json,
-        headers: { 'Content-Type' => 'application/json' }
-      ).once
-    end
-
-    it 'does not send a request when environment is not enabled' do
-      Nautilfer.to_teams(
-        message: message,
-        endpoint: endpoint,
-        environment: 'development',
-        enabled_environments: ['production']
-      )
-
-      expect(WebMock).not_to have_requested(:post, endpoint)
-    end
-  end
-
-  describe '.to_slack' do
-    let(:message) { "Slack message" }
-    let(:endpoint) { "https://example.com/slack/webhook" }
-
-    before do
-      stub_request(:post, endpoint)
-        .with(
-          body: { "text" => message }.to_json,
-          headers: { 'Content-Type' => 'application/json' }
-        )
-        .to_return(status: 200, body: "", headers: {})
-    end
-
-    it 'sends a POST request to the specified slack endpoint with the correct payload' do
-      Nautilfer.to_slack(message: message, endpoint: endpoint)
-      expect(WebMock).to have_requested(:post, endpoint).with(
-        body: { "text" => message }.to_json,
-        headers: { 'Content-Type' => 'application/json' }
-      ).once
-    end
-
-    it 'does not send a request when environment is disabled' do
-      Nautilfer.to_slack(
-        message: message,
-        endpoint: endpoint,
-        environment: 'test',
-        disabled_environments: ['test']
-      )
-
-      expect(WebMock).not_to have_requested(:post, endpoint)
     end
   end
 
@@ -280,14 +198,15 @@ RSpec.describe Nautilfer do
       end
 
       it 'applies configuration to instances' do
-        notifier = Nautilfer.new(endpoint: teams_endpoint, adapter: :teams)
+        notifier = Nautilfer.new(endpoint: teams_endpoint, adapter: Nautilfer::Adapters::Teams.new)
         notifier.notify(message)
 
         expect(WebMock).to have_requested(:post, teams_endpoint).once
       end
 
-      it 'applies configuration to helper methods' do
-        Nautilfer.to_slack(message: message, endpoint: slack_endpoint)
+      it 'applies configuration when adapter is provided as a symbol' do
+        notifier = Nautilfer.new(endpoint: slack_endpoint, adapter: :slack)
+        notifier.notify(message)
 
         expect(WebMock).to have_requested(:post, slack_endpoint).once
       end
@@ -328,7 +247,7 @@ RSpec.describe Nautilfer do
       end
 
       it 'skips notifications when configuration disables the environment' do
-        notifier = Nautilfer.new(endpoint: teams_endpoint, adapter: :teams)
+        notifier = Nautilfer.new(endpoint: teams_endpoint, adapter: Nautilfer::Adapters::Teams.new)
         notifier.notify(message)
 
         expect(WebMock).not_to have_requested(:post, teams_endpoint)

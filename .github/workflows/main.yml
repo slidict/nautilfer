@@ -15,9 +15,12 @@ jobs:
       fail-fast: false
       matrix:
         ruby:
-          # 3.5 resolves to a preview that ruby-builder has no binary for, on any
-          # runner image. Re-add it once 3.5.0 is released; the gemspec floor is 3.4.
+          # 3.5 was abandoned: the only thing ever published for it is
+          # 3.5.0-preview1, which ruby-builder has no binary for on any runner
+          # image, and the line went to 4.0 instead. 3.4 is the gemspec floor and
+          # 4.0 is what the one consumer of this gem runs.
           - '3.4'
+          - '4.0'
 
     steps:
     - uses: actions/checkout@v3

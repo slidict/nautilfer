@@ -15,11 +15,10 @@ jobs:
       fail-fast: false
       matrix:
         ruby:
-          # 3.5 was abandoned: the only thing ever published for it is
-          # 3.5.0-preview1, which ruby-builder has no binary for on any runner
-          # image, and the line went to 4.0 instead. 3.4 is the gemspec floor and
-          # 4.0 is what the one consumer of this gem runs.
-          - '3.4'
+          # Matches required_ruby_version in the gemspec, which is the floor this
+          # gem supports. 3.5 was abandoned - the only thing ever published for it
+          # is 3.5.0-preview1, which ruby-builder has no binary for on any runner
+          # image - and the line went to 4.0 instead.
           - '4.0'
 
     steps:

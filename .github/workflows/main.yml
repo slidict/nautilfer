@@ -12,10 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     name: Ruby ${{ matrix.ruby }}
     strategy:
+      fail-fast: false
       matrix:
         ruby:
+          # 3.5 resolves to a preview that ruby-builder has no binary for, on any
+          # runner image. Re-add it once 3.5.0 is released; the gemspec floor is 3.4.
           - '3.4'
-          - '3.5'
 
     steps:
     - uses: actions/checkout@v3

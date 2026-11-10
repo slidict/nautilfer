@@ -8,7 +8,7 @@
 
 ## Requirements
 
-- Ruby >= 3.4
+- Ruby >= 4.0
 
 ## Installation
 

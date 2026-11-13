@@ -9,7 +9,18 @@ RSpec.describe "Dockerfile" do
   # suite passes from a subdirectory as well as from the repository root.
   let(:dockerfile) { File.expand_path("../Dockerfile", __dir__) }
   let(:workflow) { File.expand_path("../.github/workflows/main.yml", __dir__) }
-  let(:images) { lines.grep(/\AFROM\s/i).map { |line| line[/\AFROM\s+(\S+)/i, 1] } }
+
+  let(:from_lines) { lines.grep(/\AFROM\s/i) }
+  # A stage named with AS is referred to by that name in a later FROM. Such a line
+  # names no registry image, so it is not one of the images to check.
+  let(:stage_aliases) { from_lines.filter_map { |line| line[/\sAS\s+(\S+)\s*\z/i, 1]&.downcase } }
+  # FROM accepts flags such as --platform= before the image, so the image is not
+  # always the first token. Drop the flags, then take the image and ignore any AS.
+  let(:images) do
+    from_lines.filter_map { |line|
+      line.sub(/\AFROM\s+/i, "").split(/\s+/).reject { |token| token.start_with?("--") }.first
+    }.reject { |image| stage_aliases.include?(image.downcase) }
+  end
 
   it "names only images that pull without registry credentials" do
     # Every stage, not only the first: a later stage of a multi-stage build could
@@ -30,7 +41,16 @@ RSpec.describe "Dockerfile" do
     matrix = YAML.safe_load_file(workflow).dig("jobs", "build", "strategy", "matrix", "ruby")
 
     expect(matrix).not_to be_nil, "jobs.build.strategy.matrix.ruby is missing from #{workflow}"
-    expect(matrix.map(&:to_s)).to include(images.first[/\Aruby:(\d+\.\d+)/, 1])
+
+    # The last stage is the one that runs, so that is the version to check. Reading
+    # the first stage instead would let a multi-stage build pass on its builder image
+    # while shipping a runtime the gemspec rejects.
+    runtime = images.last
+    expect(runtime).not_to be_nil, "no registry image is named in #{dockerfile}"
+
+    version = runtime[/\Aruby:(\d+\.\d+)/, 1]
+    expect(version).not_to be_nil, "the last stage #{runtime.inspect} is not a ruby:<major>.<minor> image"
+    expect(matrix.map(&:to_s)).to include(version)
   end
 
   it "sets the working directory before copying the project in" do

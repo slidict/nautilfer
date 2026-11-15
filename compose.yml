@@ -3,13 +3,13 @@ networks:
     driver: bridge
 services:
   app:
-    environment:
-      - UID=${UID}
     tty: true
     stdin_open: true
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        UID: ${UID:-1000}
     volumes:
       - ./:/app:cached
     working_dir: /app

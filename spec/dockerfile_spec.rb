@@ -88,8 +88,12 @@ RSpec.describe "Dockerfile" do
   it "sets the working directory before copying the project in" do
     # The official ruby image sets no WORKDIR. Without one, COPY would place the
     # project in / and bundle install would run there.
+    #
+    # Flags such as --chown= or --link= sit between COPY and its source, so the
+    # source is not always the first token. Skipping them keeps this about the
+    # WORKDIR relationship rather than about which flags the copy carries.
     workdir = lines.index { |line| line.match?(%r{\AWORKDIR\s+/app/?\z}i) }
-    copy = lines.index { |line| line.match?(%r{\ACOPY\s+\.(/)?\s+(\.(/)?|/app/?)\z}i) }
+    copy = lines.index { |line| line.match?(%r{\ACOPY\s+(--\S+\s+)*\.(/)?\s+(\.(/)?|/app/?)\z}i) }
 
     expect(workdir).not_to be_nil
     expect(copy).not_to be_nil

@@ -32,3 +32,34 @@ jobs:
 
     - name: Run the rspec.
       run: bundle exec rspec
+
+  dev-container:
+    runs-on: ubuntu-latest
+    name: Dev container runs as the host user
+    # Checkout and a local docker build are all this job does.
+    permissions:
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build with a UID supplied
+      run: env UID=$(id -u) docker compose build app
+
+    - name: A container write is owned by the host user, not root
+      run: |
+        env UID=$(id -u) docker compose run --rm -T app \
+          sh -c 'id -u; id -un; touch /app/ci-owner-probe'
+        stat -c '%u %n' ci-owner-probe
+        test "$(stat -c %u ci-owner-probe)" = "$(id -u)"
+        rm -f ci-owner-probe
+
+    - name: bundle install works as the non-root user
+      run: env UID=$(id -u) docker compose run --rm -T app bundle install
+
+    - name: Build with no UID in the environment, and still get the account
+      # A green build proves nothing here: the defect being fixed -- a skipped
+      # useradd, a missing USER -- builds successfully. Assert the uid instead.
+      run: |
+        docker compose build app
+        test "$(docker compose run --rm -T app id -u)" = "1000"
+        test "$(docker compose run --rm -T app id -un)" = "user"

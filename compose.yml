@@ -3,8 +3,6 @@ networks:
     driver: bridge
 services:
   app:
-    environment:
-      - UID=${UID}
     tty: true
     stdin_open: true
     build:

@@ -33,14 +33,29 @@ $ gem install nautilfer
 
 ### Resolving UID Mismatch Between Docker and Host
 
-The dev container runs as a non-root user, so files it writes to the mounted checkout should be owned by you. Pass your
-UID to the build:
+The dev container runs as a non-root user so that files it writes to the mounted checkout are owned by you rather than
+by root. The image bakes in whichever UID the build receives, and defaults to 1000.
+
+**If your UID is not 1000, the build has to be told.** Otherwise the container runs as 1000, your checkout is owned by
+someone else, and writes to `/app` fail instead of merely being misowned. Export `UID` once, and every `docker compose`
+command picks it up:
+
+```bash
+# in .bashrc or similar
+export UID
+```
+
+`export UID` with no assignment is the form that works: `UID` is read-only in bash, so `export UID=...` fails with
+`UID: readonly variable`. For a single command without touching your shell config:
 
 ```bash
 env UID=$(id -u) docker compose build app
 ```
 
-With no UID passed, the image uses uid 1000. Use `env` because `UID` is read-only in bash, so `export UID=...` fails.
+Two limits. The UID must be 1000 or above — below that it collides with a system account in the base image and
+`useradd` fails the build on purpose, so run the build as an ordinary user rather than as root. And this is about Linux
+hosts: on Docker Desktop for Windows and macOS the bind mount does not carry host ownership, so there is nothing to
+match.
 
 ## Usage
 To use nautilfer, first require it.

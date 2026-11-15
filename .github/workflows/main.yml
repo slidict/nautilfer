@@ -56,5 +56,10 @@ jobs:
     - name: bundle install works as the non-root user
       run: env UID=$(id -u) docker compose run --rm -T app bundle install
 
-    - name: Build with no UID in the environment
-      run: docker compose build app
+    - name: Build with no UID in the environment, and still get the account
+      # A green build proves nothing here: the defect being fixed -- a skipped
+      # useradd, a missing USER -- builds successfully. Assert the uid instead.
+      run: |
+        docker compose build app
+        test "$(docker compose run --rm -T app id -u)" = "1000"
+        test "$(docker compose run --rm -T app id -un)" = "user"

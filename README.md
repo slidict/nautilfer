@@ -33,15 +33,14 @@ $ gem install nautilfer
 
 ### Resolving UID Mismatch Between Docker and Host
 
-To resolve issues related to the difference between Docker's UID and the host's UID, add the following line to your .bashrc or similar shell configuration file:
+The dev container runs as a non-root user, so files it writes to the mounted checkout should be owned by you. Pass your
+UID to the build:
 
 ```bash
-export UID=${UID}
+env UID=$(id -u) docker compose build app
 ```
 
-This will ensure that the environment variable UID is correctly set in your Docker containers, matching your host system's user ID.
-
-This explanation provides clear instructions on how to resolve the UID mismatch issue using the export command.
+With no UID passed, the image uses uid 1000. Use `env` because `UID` is read-only in bash, so `export UID=...` fails.
 
 ## Usage
 To use nautilfer, first require it.

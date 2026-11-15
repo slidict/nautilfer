@@ -1,0 +1,8 @@
+Gemfile.lock
+.bundle
+vendor/bundle
+tmp
+log
+coverage
+pkg
+.rspec_status

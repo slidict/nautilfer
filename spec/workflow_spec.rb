@@ -8,10 +8,12 @@ RSpec.describe "CI workflow triggers" do
   # on a repository whose default branch is `main`, so no push run ever fired.
   let(:workflow) { File.expand_path("../.github/workflows/main.yml", __dir__) }
 
-  # YAML 1.1 reads the bare key `on` as the boolean true, not the string "on". A
-  # lookup by "on" returns nil, so the checks below would pass or fail for the wrong
-  # reason.
-  let(:triggers) { YAML.safe_load_file(workflow)[true] }
+  # YAML 1.1 reads the bare key `on` as the boolean true, not the string "on", so a
+  # lookup by "on" alone returns nil and the checks below would fail for the wrong
+  # reason. Both spellings are accepted because quoting the key as `"on":` is the
+  # usual way to silence a yamllint truthy warning: without the fallback, that edit
+  # would report a missing `on:` section while the triggers were present and correct.
+  let(:triggers) { YAML.safe_load_file(workflow).then { |doc| doc[true] || doc["on"] } }
 
   it "runs on pushes to main" do
     # A literal on purpose: this is the decision itself, so changing the default

@@ -11,6 +11,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: Ruby ${{ matrix.ruby }}
+    # Checkout and rspec are all this job does. It matters now that the push
+    # trigger above actually fires: until this change it never ran on a push, so
+    # its token had never carried the repository default scopes.
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:

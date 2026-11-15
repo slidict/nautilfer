@@ -53,9 +53,9 @@ env UID=$(id -u) docker compose build app
 ```
 
 Two limits. The UID must be 1000 or above — below that it collides with a system account in the base image and
-`useradd` fails the build on purpose, so run the build as an ordinary user rather than as root. And this is about Linux
-hosts: on Docker Desktop for Windows and macOS the bind mount does not carry host ownership, so there is nothing to
-match.
+`useradd` fails the build on purpose (`useradd: UID 0 is not unique`), so run the build as an ordinary user rather than
+as root. And this matters on Linux hosts: on Docker Desktop for Windows the bind mount does not carry host ownership,
+so there is nothing to match.
 
 ## Usage
 To use nautilfer, first require it.

@@ -36,6 +36,9 @@ jobs:
   dev-container:
     runs-on: ubuntu-latest
     name: Dev container runs as the host user
+    # Checkout and a local docker build are all this job does.
+    permissions:
+      contents: read
     steps:
     - uses: actions/checkout@v4
 
